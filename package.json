@@ -1,0 +1,19 @@
+{
+  "name": "findmyclass",
+  "version": "1.0.0",
+  "description": "FindMyClass – Smart Campus Classroom & Location Navigator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "campus",
+    "navigation",
+    "classroom-finder",
+    "gemini-ai",
+    "hackathon"
+  ],
+  "author": "Neeraj",
+  "license": "MIT"
+}

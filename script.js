@@ -238,8 +238,6 @@ const CAMPUS_LOCATIONS = [
 // ==========================================================================
 const STORAGE_KEYS = {
   FAVORITES: "findmyclass_favorites",
-  API_KEY: "findmyclass_api_key",
-  API_PROVIDER: "findmyclass_api_provider",
   RECENT_SEARCHES: "findmyclass_recents"
 };
 
@@ -567,40 +565,9 @@ function updateModalFavoriteBtnState() {
 // ==========================================================================
 // 8. Campus AI Assistant & Reasoning Engine
 // ==========================================================================
-function getActiveApiKey() {
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramKey = urlParams.get("apikey") || urlParams.get("key");
-    if (paramKey && paramKey.trim().length > 5) {
-      localStorage.setItem(STORAGE_KEYS.API_KEY, paramKey.trim());
-      const cleanUrl = window.location.pathname + window.location.hash;
-      window.history.replaceState({}, document.title, cleanUrl);
-      return paramKey.trim();
-    }
-  } catch (e) {
-    // Ignore URL parsing errors
-  }
-
-  if (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.GEMINI_API_KEY && CAMPUS_AI_CONFIG.GEMINI_API_KEY.trim().length > 5) {
-    return CAMPUS_AI_CONFIG.GEMINI_API_KEY.trim();
-  }
-  const localKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
-  if (localKey && localKey.trim().length > 5) {
-    return localKey.trim();
-  }
-  return null;
-}
-
 function initApiKeyStatus() {
-  const activeKey = getActiveApiKey();
-  const savedProvider = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.PROVIDER) || localStorage.getItem(STORAGE_KEYS.API_PROVIDER) || "gemini";
-
   if (apiKeyStatusText) {
-    if (activeKey) {
-      apiKeyStatusText.textContent = `API: Active (${savedProvider.toUpperCase()})`;
-    } else {
-      apiKeyStatusText.textContent = "API: Ready (Local AI)";
-    }
+    apiKeyStatusText.textContent = "AI Assistant: Online";
   }
 }
 
@@ -739,21 +706,29 @@ async function processAiQuery(queryText) {
 
   const indicator = showAiTypingIndicator();
 
-  // Try API if key configured in config.js or local storage, otherwise fallback to offline AI engine
-  const activeKey = getActiveApiKey();
+  const apiUrl = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.BACKEND_API_URL) || "/api/ai";
   let responseHtml = "";
 
-  if (activeKey && activeKey.trim().length > 10) {
-    try {
-      responseHtml = await queryGeminiApi(text, activeKey);
-    } catch (err) {
-      console.warn("External API attempt failed, using local Campus AI engine:", err);
-      responseHtml = resolveCampusAiQuery(text);
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: text })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && data.text) {
+        responseHtml = formatAiResponse(data.text, data.location);
+      } else {
+        responseHtml = `<p>AI navigation is temporarily unavailable. You can still search campus locations manually.</p>`;
+      }
+    } else {
+      responseHtml = `<p>AI navigation is temporarily unavailable. You can still search campus locations manually.</p>`;
     }
-  } else {
-    // Artificial small delay for natural interaction
-    await new Promise((res) => setTimeout(res, 350));
-    responseHtml = resolveCampusAiQuery(text);
+  } catch (err) {
+    // Never expose technical network details or credentials
+    responseHtml = `<p>AI navigation is temporarily unavailable. You can still search campus locations manually.</p>`;
   }
 
   if (indicator && indicator.parentNode) {
@@ -763,47 +738,26 @@ async function processAiQuery(queryText) {
   appendAiMessage(responseHtml);
 }
 
-// Google Gemini API connector (Runs securely in background without exposing keys or buttons)
-async function queryGeminiApi(prompt, apiKey) {
-  const campusSummary = CAMPUS_LOCATIONS.map(
-    (l) => `${l.name} (Room: ${l.room}, Block: ${l.block}, Floor: ${l.floor}, Landmark: ${l.landmark}, Directions: ${l.directions}, Hours: ${l.timings})`
-  ).join("\n");
-
-  const systemInstruction = `You are FindMyClass AI Campus Assistant for college students.
-Use this campus directory to answer clearly, politely, and concisely with step-by-step navigation instructions:
-${campusSummary}
-Keep answers under 3-4 sentences. Mention the Block, Floor, Room number, and nearby Landmark.`;
-
-  let modelName = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.MODEL) || "gemini-1.5-flash";
-  if (!modelName || modelName.trim() === "gemini") {
-    modelName = "gemini-1.5-flash";
+function formatAiResponse(rawText, locationMeta) {
+  const lower = rawText.toLowerCase();
+  if (lower.includes("sorry, i couldn't find that location in this campus")) {
+    return `<p>Sorry, I couldn't find that location in this campus.</p>`;
   }
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
-  
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: `${systemInstruction}\n\nStudent question: ${prompt}` }]
-      }]
-    })
-  });
-
-  if (!response.ok) throw new Error(`API HTTP ${response.status}`);
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Empty candidate response");
 
   let matchedLoc = null;
-  for (const loc of CAMPUS_LOCATIONS) {
-    if (text.toLowerCase().includes(loc.name.toLowerCase()) || text.toLowerCase().includes(loc.room.toLowerCase())) {
-      matchedLoc = loc;
-      break;
+  if (locationMeta && locationMeta.id) {
+    matchedLoc = CAMPUS_LOCATIONS.find((l) => l.id === locationMeta.id);
+  }
+  if (!matchedLoc) {
+    for (const loc of CAMPUS_LOCATIONS) {
+      if (lower.includes(loc.name.toLowerCase()) || lower.includes(loc.room.toLowerCase())) {
+        matchedLoc = loc;
+        break;
+      }
     }
   }
 
-  let html = `<p>${escapeHtml(text).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>`;
+  let html = `<p>${escapeHtml(rawText).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>`;
   if (matchedLoc) {
     html += `
       <div class="ai-route-card">

@@ -1,12 +1,11 @@
 /**
- * FindMyClass — API Configuration
+ * FindMyClass — Client Configuration
  * 
- * Paste your Google Gemini API key below to activate live Gemini AI routing.
- * The key is used internally in the background for campus queries and is never displayed on the website UI.
+ * NOTE: For security, no API keys or secrets are stored in client-side code.
+ * All AI requests are routed through a secure backend or serverless API endpoint.
  */
 const CAMPUS_AI_CONFIG = {
-  // Enter your Google Gemini API Key here (e.g., "AIzaSy...")
-  GEMINI_API_KEY: "",
-  PROVIDER: "gemini",
-  MODEL: "gemini-1.5-flash"
+  // Relative '/api/ai' when frontend and backend share domain (e.g., local server or Vercel),
+  // or your deployed backend URL (e.g., 'https://your-backend.vercel.app/api/ai')
+  BACKEND_API_URL: "/api/ai"
 };
