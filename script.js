@@ -567,12 +567,23 @@ function updateModalFavoriteBtnState() {
 // ==========================================================================
 // 8. Campus AI Assistant & Reasoning Engine
 // ==========================================================================
+function getActiveApiKey() {
+  if (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.GEMINI_API_KEY && CAMPUS_AI_CONFIG.GEMINI_API_KEY.trim().length > 5) {
+    return CAMPUS_AI_CONFIG.GEMINI_API_KEY.trim();
+  }
+  const localKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+  if (localKey && localKey.trim().length > 5) {
+    return localKey.trim();
+  }
+  return null;
+}
+
 function initApiKeyStatus() {
-  const savedKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
-  const savedProvider = localStorage.getItem(STORAGE_KEYS.API_PROVIDER) || "gemini";
+  const activeKey = getActiveApiKey();
+  const savedProvider = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.PROVIDER) || localStorage.getItem(STORAGE_KEYS.API_PROVIDER) || "gemini";
 
   if (apiKeyStatusText) {
-    if (savedKey && savedKey.trim().length > 5) {
+    if (activeKey) {
       apiKeyStatusText.textContent = `API: Active (${savedProvider.toUpperCase()})`;
     } else {
       apiKeyStatusText.textContent = "API: Ready (Local AI)";
@@ -715,13 +726,13 @@ async function processAiQuery(queryText) {
 
   const indicator = showAiTypingIndicator();
 
-  // Try API if key stored in local storage, otherwise fallback to offline AI engine
-  const savedKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+  // Try API if key configured in config.js or local storage, otherwise fallback to offline AI engine
+  const activeKey = getActiveApiKey();
   let responseHtml = "";
 
-  if (savedKey && savedKey.trim().length > 10) {
+  if (activeKey && activeKey.trim().length > 10) {
     try {
-      responseHtml = await queryGeminiApi(text, savedKey);
+      responseHtml = await queryGeminiApi(text, activeKey);
     } catch (err) {
       console.warn("External API attempt failed, using local Campus AI engine:", err);
       responseHtml = resolveCampusAiQuery(text);
@@ -750,7 +761,8 @@ Use this campus directory to answer clearly, politely, and concisely with step-b
 ${campusSummary}
 Keep answers under 3-4 sentences. Mention the Block, Floor, Room number, and nearby Landmark.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+  const modelName = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.MODEL) || "gemini-1.5-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
   
   const response = await fetch(url, {
     method: "POST",
