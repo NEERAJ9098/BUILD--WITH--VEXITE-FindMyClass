@@ -761,7 +761,10 @@ Use this campus directory to answer clearly, politely, and concisely with step-b
 ${campusSummary}
 Keep answers under 3-4 sentences. Mention the Block, Floor, Room number, and nearby Landmark.`;
 
-  const modelName = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.MODEL) || "gemini-1.5-flash";
+  let modelName = (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.MODEL) || "gemini-1.5-flash";
+  if (!modelName || modelName.trim() === "gemini") {
+    modelName = "gemini-1.5-flash";
+  }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
   
   const response = await fetch(url, {
