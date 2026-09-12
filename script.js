@@ -721,14 +721,15 @@ async function processAiQuery(queryText) {
       if (data && data.success && data.text) {
         responseHtml = formatAiResponse(data.text, data.location);
       } else {
-        responseHtml = `<p>AI navigation is temporarily unavailable. You can still search campus locations manually.</p>`;
+        responseHtml = resolveCampusAiQuery(text);
       }
     } else {
-      responseHtml = `<p>AI navigation is temporarily unavailable. You can still search campus locations manually.</p>`;
+      responseHtml = resolveCampusAiQuery(text);
     }
   } catch (err) {
-    // Never expose technical network details or credentials
-    responseHtml = `<p>AI navigation is temporarily unavailable. You can still search campus locations manually.</p>`;
+    // When deployed as static frontend only (e.g. GitHub Pages without a separate server),
+    // smoothly fallback to offline campus reasoning engine so users always get complete directions!
+    responseHtml = resolveCampusAiQuery(text);
   }
 
   if (indicator && indicator.parentNode) {
