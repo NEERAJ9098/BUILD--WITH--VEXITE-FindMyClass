@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindMyClass — Campus Classroom & Location Navigator</title>
+  <meta name="description" content="Find your classrooms, labs, offices, libraries, hostels, and amenities across campus with real-time search and smart guidance.">
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top Announcement / Status Bar -->
+  <div class="top-announcement-bar" id="announcementBar">
+    <div class="container announcement-inner">
+      <span>🎓 Welcome to Campus! Need directions? Type your room number or block below.</span>
+      <span class="api-status-pill">
+        <span class="status-dot active"></span>
+        <span id="apiKeyStatusText">API: Ready (Local AI)</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar-wrapper" id="mainHeader">
+    <nav class="container navbar">
+      <a href="#home" class="brand-logo" id="brandLogo">
+        <span class="logo-pin">📍</span>
+        <span class="brand-name">FindMyClass</span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#home" class="nav-link active" id="navHome">Home</a>
+        <a href="#quickAccessSection" class="nav-link" id="navQuick">Quick Access</a>
+        <a href="#campusMapSection" class="nav-link" id="navMap">Campus Map</a>
+        <a href="#locations" class="nav-link" id="navLocations">Locations</a>
+        <a href="#howItWorks" class="nav-link" id="navHowItWorks">How It Works</a>
+        <button class="favorites-nav-btn" id="navFavoritesBtn" title="View Saved Locations">
+          ⭐ Saved (<span id="favCountBadge">0</span>)
+        </button>
+      </div>
+
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section" id="home">
+      <div class="hero-pattern-bg"></div>
+      <div class="hero-blob hero-blob-1"></div>
+      <div class="hero-blob hero-blob-2"></div>
+      
+      <div class="container hero-container-grid">
+        <!-- Hero Left / Content -->
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span>🎓 Smart Campus Navigation</span>
+          </div>
+          <h1 class="hero-title">Find Your Class. Find Your Way.</h1>
+          <p class="hero-subtitle">Navigate your campus faster, smarter, and stress-free.</p>
+
+          <!-- Large Search Box -->
+          <div class="search-box-container">
+            <form class="search-form" id="searchForm" onsubmit="return false;">
+              <div class="search-input-wrapper">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input 
+                  type="text" 
+                  id="campusSearchInput" 
+                  class="search-input" 
+                  placeholder="Search classroom, lab, office, block or room..." 
+                  autocomplete="off"
+                  aria-label="Search classroom, lab, office..."
+                >
+                <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Clear search" style="display: none;">✕</button>
+              </div>
+              <button type="button" id="searchSubmitBtn" class="btn btn-primary search-btn">
+                Search
+              </button>
+            </form>
+
+            <!-- Quick Suggestion Chips -->
+            <div class="quick-tags" id="quickTags">
+              <span class="quick-tag-label">Popular searches:</span>
+              <button class="tag-chip" data-query="CSE Lab">CSE Lab</button>
+              <button class="tag-chip" data-query="B-204">B-204</button>
+              <button class="tag-chip" data-query="Central Library">Central Library</button>
+              <button class="tag-chip" data-query="Block B">Block B</button>
+              <button class="tag-chip" data-query="Canteen">Canteen</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Right / Interactive Route Visual -->
+        <div class="hero-visual-wrapper">
+          <div class="hero-route-card" id="heroRouteCard">
+            <div class="route-card-header">
+              <div class="route-live-pill">
+                <span class="status-dot active"></span>
+                <span>Live Route Preview</span>
+              </div>
+              <span class="route-time-badge">⏱️ ~3 min walk • 240m</span>
+            </div>
+
+            <!-- Visual Waypoint Tracker -->
+            <div class="route-tracker">
+              <!-- Waypoint 1 -->
+              <div class="waypoint-item active">
+                <div class="waypoint-icon-box origin-box">📍</div>
+                <div class="waypoint-info">
+                  <div class="waypoint-label">You are here</div>
+                  <div class="waypoint-title">Main Gate (North Entrance)</div>
+                  <div class="waypoint-meta">Ground Level • Security Checkpoint</div>
+                </div>
+              </div>
+
+              <!-- Route Path Segment -->
+              <div class="route-path-segment">
+                <div class="route-line">
+                  <span class="route-pulse-dot"></span>
+                </div>
+                <span class="route-instruction">Take central walkway toward Block B (140m)</span>
+              </div>
+
+              <!-- Waypoint 2 -->
+              <div class="waypoint-item active">
+                <div class="waypoint-icon-box block-box">🏢</div>
+                <div class="waypoint-info">
+                  <div class="waypoint-label">Transit Checkpoint</div>
+                  <div class="waypoint-title">Block B (Computer Science)</div>
+                  <div class="waypoint-meta">Take Central Staircase / Lift to Floor 2</div>
+                </div>
+              </div>
+
+              <!-- Route Path Segment -->
+              <div class="route-path-segment">
+                <div class="route-line">
+                  <span class="route-pulse-dot" style="animation-delay: 1s;"></span>
+                </div>
+                <span class="route-instruction">Turn right down hallway, opposite Room B-201</span>
+              </div>
+
+              <!-- Waypoint 3 -->
+              <div class="waypoint-item destination-item">
+                <div class="waypoint-icon-box dest-box">🚪</div>
+                <div class="waypoint-info">
+                  <div class="waypoint-label">Destination</div>
+                  <div class="waypoint-title">CSE Lab (Room B-204)</div>
+                  <div class="waypoint-meta">2nd Floor • Open until 05:30 PM</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Interactive Prompt -->
+            <div class="route-card-footer">
+              <button type="button" class="btn btn-sm btn-outline" id="heroTryRouteBtn" data-query="CSE Lab">
+                🧭 View CSE Lab Details
+              </button>
+              <button type="button" class="btn btn-sm btn-subtle" id="heroExploreAllBtn">
+                🏢 Explore All Blocks
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Campus Statistics Strip -->
+    <section class="stats-section" id="statsSection">
+      <div class="container stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📍</div>
+          <div class="stat-info">
+            <div class="stat-number"><span class="counter" data-target="20">0</span>+</div>
+            <div class="stat-label">Campus Locations</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-info">
+            <div class="stat-number"><span class="counter" data-target="6">0</span></div>
+            <div class="stat-label">Academic Buildings</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🧪</div>
+          <div class="stat-info">
+            <div class="stat-number"><span class="counter" data-target="8">0</span></div>
+            <div class="stat-label">Specialized Labs</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🎓</div>
+          <div class="stat-info">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">Student Friendly</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Access Section -->
+    <section class="quick-access-section" id="quickAccessSection">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <span class="section-tag">⚡ Immediate Shortcuts</span>
+            <h2 class="section-title">Quick Access</h2>
+            <p class="section-subtitle">Instant one-tap navigation to frequently needed student facilities</p>
+          </div>
+        </div>
+
+        <div class="quick-access-grid">
+          <!-- Card 1: Library -->
+          <div class="quick-card" data-category="Student Amenities" data-query="Library">
+            <div class="quick-card-icon" style="background: #eff6ff; color: #2563eb;">📚</div>
+            <h3 class="quick-card-title">Library</h3>
+            <p class="quick-card-desc">Study zones, digital research cubicles, book archives</p>
+            <span class="quick-card-link">Explore Library →</span>
+          </div>
+
+          <!-- Card 2: Labs -->
+          <div class="quick-card" data-category="Laboratory" data-query="">
+            <div class="quick-card-icon" style="background: #fdf2f8; color: #db2777;">🧪</div>
+            <h3 class="quick-card-title">Labs</h3>
+            <p class="quick-card-desc">Computer Science, Electronics, Hardware & Workshops</p>
+            <span class="quick-card-link">Explore Labs →</span>
+          </div>
+
+          <!-- Card 3: Classrooms -->
+          <div class="quick-card" data-category="Classroom" data-query="">
+            <div class="quick-card-icon" style="background: #f0fdf4; color: #16a34a;">🏫</div>
+            <h3 class="quick-card-title">Classrooms</h3>
+            <p class="quick-card-desc">Smart lecture halls, tutorial rooms, seminar spaces</p>
+            <span class="quick-card-link">Explore Classrooms →</span>
+          </div>
+
+          <!-- Card 4: Canteen -->
+          <div class="quick-card" data-category="Student Amenities" data-query="Canteen">
+            <div class="quick-card-icon" style="background: #fffbeb; color: #d97706;">🍔</div>
+            <h3 class="quick-card-title">Canteen</h3>
+            <p class="quick-card-desc">Campus cafeteria, quick snacks, hot meals & beverages</p>
+            <span class="quick-card-link">Explore Canteen →</span>
+          </div>
+
+          <!-- Card 5: Offices -->
+          <div class="quick-card" data-category="Administrative" data-query="">
+            <div class="quick-card-icon" style="background: #f5f3ff; color: #7c3aed;">🏢</div>
+            <h3 class="quick-card-title">Offices</h3>
+            <p class="quick-card-desc">Principal suite, Academic Dean, Exam Cell & Accounts</p>
+            <span class="quick-card-link">Explore Offices →</span>
+          </div>
+
+          <!-- Card 6: Help Desk -->
+          <div class="quick-card" data-category="Administrative" data-query="Help Desk">
+            <div class="quick-card-icon" style="background: #fef2f2; color: #dc2626;">🆘</div>
+            <h3 class="quick-card-title">Help Desk</h3>
+            <p class="quick-card-desc">ID issuance, student inquiries, lost & found assistance</p>
+            <span class="quick-card-link">Get Support →</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- "I'm Lost" Feature Banner -->
+    <section class="lost-banner-section" id="lostSection">
+      <div class="container">
+        <div class="lost-card">
+          <div class="lost-card-glow"></div>
+          <div class="lost-content">
+            <div class="lost-badge">🧭 Instant Campus Wayfinder</div>
+            <h2 class="lost-title">Lost on Campus?</h2>
+            <p class="lost-desc">Tell us where you are and where you want to go. We'll guide you step-by-step with landmarks, floor changes, and clear walking directions.</p>
+            <button type="button" class="btn btn-primary btn-lg lost-btn" id="openWayfinderBtn">
+              🧭 Find My Way
+            </button>
+          </div>
+          <div class="lost-visual">
+            <div class="lost-compass-card">
+              <div class="compass-circle">
+                <span class="compass-needle">🧭</span>
+              </div>
+              <div class="compass-caption">Step-by-Step Waypoint Guidance</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Digital Campus Map Section -->
+    <section class="campus-map-section" id="campusMapSection">
+      <div class="container">
+        <div class="section-header flex-between">
+          <div>
+            <span class="section-tag">🗺️ Visual Schematic</span>
+            <h2 class="section-title">Interactive Campus Map</h2>
+            <p class="section-subtitle">Click on any building node to highlight locations and find walking pathways</p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="resetMapSelectionBtn">
+            Reset Map View
+          </button>
+        </div>
+
+        <div class="campus-map-card">
+          <div class="map-schematic-wrapper">
+            <!-- SVG Campus Map Schematic -->
+            <svg class="campus-map-svg" viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#2563eb" stop-opacity="0.9"/>
+                </linearGradient>
+                <filter id="nodeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#2563eb" flood-opacity="0.25"/>
+                </filter>
+              </defs>
+
+              <!-- Walkway Connecting Paths -->
+              <path class="map-walkway" d="M 120,410 L 120,290 L 300,290" />
+              <path class="map-walkway" d="M 300,290 L 300,120 L 520,120" />
+              <path class="map-walkway" d="M 300,290 L 520,290 L 740,290" />
+              <path class="map-walkway" d="M 520,120 L 520,290 L 520,410" />
+              <path class="map-walkway" d="M 520,290 L 740,150" />
+              <path class="map-walkway" d="M 740,290 L 740,410" />
+
+              <!-- Walkway Active Animated Pulse -->
+              <path class="map-walkway-pulse" d="M 120,410 L 120,290 L 300,290 L 520,290 L 520,120" />
+
+              <!-- Central Plaza Label -->
+              <text x="410" y="270" class="map-lawn-text">🌿 Central Courtyard</text>
+            </svg>
+
+            <!-- Interactive Building HTML Overlays -->
+            <div class="map-buildings-layer">
+              <!-- Building: Main Gate -->
+              <div class="map-node node-gate" data-block="Entrance Sector" style="left: 6%; top: 76%;">
+                <div class="node-icon">🚪</div>
+                <div class="node-label">
+                  <strong>Main Gate</strong>
+                  <span>Entrance & Security</span>
+                </div>
+              </div>
+
+              <!-- Building: Parking -->
+              <div class="map-node node-parking" data-block="Entrance Sector" style="left: 6%; top: 48%;">
+                <div class="node-icon">🚗</div>
+                <div class="node-label">
+                  <strong>Parking Area</strong>
+                  <span>Vehicles & EV Slots</span>
+                </div>
+              </div>
+
+              <!-- Building: Block A -->
+              <div class="map-node node-block-a" data-block="Block A" style="left: 26%; top: 48%;">
+                <div class="node-icon">🏛️</div>
+                <div class="node-label">
+                  <strong>Block A</strong>
+                  <span>Admin & Reception</span>
+                </div>
+              </div>
+
+              <!-- Building: Central Library -->
+              <div class="map-node node-library" data-block="Block A" data-query="Library" style="left: 26%; top: 12%;">
+                <div class="node-icon">📚</div>
+                <div class="node-label">
+                  <strong>Central Library</strong>
+                  <span>Floors 1 & 2 • Reading</span>
+                </div>
+              </div>
+
+              <!-- Building: Block B -->
+              <div class="map-node node-block-b" data-block="Block B" style="left: 51%; top: 12%;">
+                <div class="node-icon">💻</div>
+                <div class="node-label">
+                  <strong>Block B (CSE)</strong>
+                  <span>CSE Labs & Lecture Halls</span>
+                </div>
+              </div>
+
+              <!-- Building: Canteen -->
+              <div class="map-node node-canteen" data-block="Block D" data-query="Canteen" style="left: 51%; top: 50%;">
+                <div class="node-icon">☕</div>
+                <div class="node-label">
+                  <strong>Canteen</strong>
+                  <span>Cafeteria & Dining</span>
+                </div>
+              </div>
+
+              <!-- Building: Block C -->
+              <div class="map-node node-block-c" data-block="Block C" style="left: 51%; top: 76%;">
+                <div class="node-icon">⚙️</div>
+                <div class="node-label">
+                  <strong>Block C (Labs)</strong>
+                  <span>Electronics & Workshops</span>
+                </div>
+              </div>
+
+              <!-- Building: Auditorium -->
+              <div class="map-node node-auditorium" data-block="Main Complex" data-query="Auditorium" style="left: 76%; top: 18%;">
+                <div class="node-icon">🎭</div>
+                <div class="node-label">
+                  <strong>Auditorium</strong>
+                  <span>1200 Seats • Main Stage</span>
+                </div>
+              </div>
+
+              <!-- Building: Hostels -->
+              <div class="map-node node-hostels" data-block="Block H1" data-query="Hostel" style="left: 76%; top: 76%;">
+                <div class="node-icon">🛏️</div>
+                <div class="node-label">
+                  <strong>Hostels H1 & H2</strong>
+                  <span>Student Residences</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="map-legend">
+            <span class="legend-item"><span class="legend-dot active"></span> Click any building to view rooms</span>
+            <span class="legend-item"><span class="legend-dot line"></span> Connected pedestrian corridors</span>
+            <span class="legend-item"><span class="legend-dot hub"></span> Central Courtyard junction</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Popular Locations Section -->
+    <section class="popular-section" id="popularLocationsSection">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <span class="section-tag">⭐ Student Favorites</span>
+            <h2 class="section-title">Popular Spots on Campus</h2>
+            <p class="section-subtitle">Most frequently visited student facilities, computer labs, and hubs</p>
+          </div>
+        </div>
+
+        <div class="popular-grid" id="popularGrid">
+          <!-- Dynamically populated popular spots with distinct icons -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Campus Locations Section -->
+    <section class="locations-section" id="locations">
+      <div class="container">
+        <div class="section-header flex-between">
+          <div>
+            <span class="section-tag">🏢 Complete Directory</span>
+            <h2 class="section-title">Campus Locations Directory</h2>
+            <p class="section-subtitle">Explore lecture halls, labs, administrative offices, and student amenities</p>
+          </div>
+          <div class="results-stats" id="resultsCount">
+            Showing <strong id="visibleCount">16</strong> locations
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-filters-wrapper">
+          <div class="category-filters" id="categoryFilters">
+            <button class="filter-pill active" data-category="all">All Locations</button>
+            <button class="filter-pill" data-category="Laboratory">🧪 Laboratories</button>
+            <button class="filter-pill" data-category="Classroom">🏫 Classrooms</button>
+            <button class="filter-pill" data-category="Administrative">🏛️ Administrative</button>
+            <button class="filter-pill" data-category="Student Amenities">☕ Amenities & Food</button>
+            <button class="filter-pill" data-category="Auditorium & Halls">🎭 Halls & Events</button>
+            <button class="filter-pill" data-category="Accommodation">🛏️ Hostels</button>
+            <button class="filter-pill" data-category="Campus Facility">🚗 Facilities & Gates</button>
+          </div>
+        </div>
+
+        <!-- Locations Grid Container -->
+        <div class="locations-grid" id="locationsGrid">
+          <!-- Cards populated by script.js -->
+        </div>
+
+        <!-- Friendly Empty State Message -->
+        <div class="empty-state-card" id="emptyState" style="display: none;">
+          <div class="empty-state-icon">🔍</div>
+          <h3 class="empty-state-title">No location found</h3>
+          <p class="empty-state-msg">Try searching by room number, block or building.</p>
+          <div class="empty-state-suggestions">
+            <span>Popular suggestions:</span>
+            <button class="suggest-btn" data-query="CSE">"CSE Lab"</button>
+            <button class="suggest-btn" data-query="B-204">"B-204"</button>
+            <button class="suggest-btn" data-query="Library">"Library"</button>
+            <button class="suggest-btn" data-query="Canteen">"Canteen"</button>
+          </div>
+          <button class="btn btn-outline" id="resetFiltersBtn">Reset Search & Show All</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works-section" id="howItWorks">
+      <div class="container">
+        <div class="section-header center">
+          <span class="section-tag">🧭 Simple 3-Step Process</span>
+          <h2 class="section-title">How It Works</h2>
+          <p class="section-subtitle">Effortless navigation from anywhere on campus</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num-badge">01</div>
+            <div class="step-icon">🔍</div>
+            <h3 class="step-title">Search</h3>
+            <p class="step-desc">Search your classroom, lab or office.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num-badge">02</div>
+            <div class="step-icon">📍</div>
+            <h3 class="step-title">Select</h3>
+            <p class="step-desc">Choose your destination.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num-badge">03</div>
+            <div class="step-icon">🧭</div>
+            <h3 class="step-title">Navigate</h3>
+            <p class="step-desc">Follow simple step-by-step directions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Location Details Modal -->
+  <div class="modal-overlay" id="locationModal" aria-hidden="true" role="dialog">
+    <div class="modal-card">
+      <button class="modal-close-btn" id="closeModalBtn" aria-label="Close details dialog">✕</button>
+      
+      <div class="modal-header">
+        <div class="modal-badge-row">
+          <span class="badge badge-category" id="modalCategory">Laboratory</span>
+          <span class="badge badge-block" id="modalBlock">Block B</span>
+        </div>
+        <h2 class="modal-title" id="modalName">CSE Lab</h2>
+        <p class="modal-description" id="modalDescription">Computer Science practical laboratory</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="details-spec-grid">
+          <div class="spec-box">
+            <span class="spec-label">🏢 Building / Block</span>
+            <span class="spec-val" id="modalSpecBlock">Block B</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-label">📶 Floor Level</span>
+            <span class="spec-val" id="modalSpecFloor">2nd Floor</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-label">🚪 Room Number</span>
+            <span class="spec-val" id="modalSpecRoom">B-204</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-label">🏷️ Location Type</span>
+            <span class="spec-val" id="modalSpecCategory">Laboratory</span>
+          </div>
+        </div>
+
+        <div class="directions-guide-box">
+          <h4 class="guide-title">🚶 Walking Directions & Landmarks</h4>
+          <p class="guide-text" id="modalDirections">Take the central staircase in Block B to the 2nd floor, turn right down the hallway; opposite to the Hardware Lab.</p>
+        </div>
+
+        <div class="timing-facilities-box">
+          <div class="facility-item">
+            <span class="fac-icon">⏰</span>
+            <div>
+              <strong>Standard Timings:</strong>
+              <span id="modalTimings">08:30 AM - 05:30 PM (Mon-Sat)</span>
+            </div>
+          </div>
+          <div class="facility-item">
+            <span class="fac-icon">💡</span>
+            <div>
+              <strong>Nearest Landmark:</strong>
+              <span id="modalLandmark">Block B Staircase A & Water Cooler</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="modalFavoriteBtn">
+          ⭐ <span id="modalFavText">Save to Favorites</span>
+        </button>
+        <button class="btn btn-primary" id="copyDetailsBtn">
+          📋 Copy Location Info
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive "I'm Lost" Wayfinder Modal -->
+  <div class="modal-overlay" id="wayfinderModal" aria-hidden="true" role="dialog">
+    <div class="modal-card wayfinder-modal-card">
+      <button class="modal-close-btn" id="closeWayfinderBtn" aria-label="Close wayfinder dialog">✕</button>
+      
+      <div class="modal-header">
+        <div class="modal-badge-row">
+          <span class="badge badge-category">🧭 Instant Wayfinder</span>
+          <span class="badge badge-block">Smart Turn-by-Turn</span>
+        </div>
+        <h2 class="modal-title">Campus Wayfinder & Directions</h2>
+        <p class="modal-description">Select where you are currently standing and where you want to go. We'll generate an optimized walking route.</p>
+      </div>
+
+      <div class="modal-body">
+        <form class="wayfinder-form" id="wayfinderForm" onsubmit="return false;">
+          <div class="wayfinder-input-row">
+            <div class="form-group-wf">
+              <label for="wayfinderOrigin" class="wf-label">📍 Your Current Location:</label>
+              <select id="wayfinderOrigin" class="wf-select">
+                <option value="Main Gate">Main Gate (North Campus Entrance)</option>
+                <option value="Parking Area">Parking Area & Bus Bay</option>
+                <option value="Block A Reception">Block A (Atrium & Reception)</option>
+                <option value="Block B Entrance">Block B (Computer Science Foyer)</option>
+                <option value="Block C Entrance">Block C (Engineering & Labs Foyer)</option>
+                <option value="College Canteen">College Canteen & Courtyard</option>
+                <option value="Central Library">Central Library (Block A)</option>
+                <option value="Auditorium">Auditorium Plaza</option>
+              </select>
+            </div>
+
+            <div class="form-group-wf">
+              <label for="wayfinderDestination" class="wf-label">🎯 Where do you want to go?</label>
+              <select id="wayfinderDestination" class="wf-select">
+                <!-- Dynamically populated from CAMPUS_LOCATIONS -->
+              </select>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-block wf-submit-btn" id="calcRouteBtn">
+            🧭 Calculate Step-by-Step Route
+          </button>
+        </form>
+
+        <!-- Route Output Card -->
+        <div class="wf-route-result" id="wayfinderResult" style="display: none;">
+          <div class="wf-route-header">
+            <h4 class="wf-route-destination" id="wfRouteTitle">Directions to CSE Lab</h4>
+            <span class="wf-route-est" id="wfRouteEst">⏱️ ~3 mins walk • 240m</span>
+          </div>
+
+          <div class="wf-steps-list" id="wfStepsList">
+            <!-- Dynamically populated steps -->
+          </div>
+
+          <div class="wf-route-tips" id="wfRouteTips">
+            <!-- Tips and landmarks -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="closeWfFooterBtn">Close Wayfinder</button>
+        <button class="btn btn-primary" id="viewTargetLocationBtn" style="display: none;">
+          📍 View Location Card
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Floating Campus AI Assistant Widget -->
+  <div class="ai-widget-wrapper" id="aiWidgetWrapper">
+    <button class="ai-widget-btn" id="aiChatToggleBtn" aria-label="Open Campus AI Assistant">
+      <span class="ai-widget-icon">🤖</span>
+      <span class="ai-widget-label">Ask Campus AI</span>
+      <span class="ai-widget-pulse"></span>
+    </button>
+
+    <!-- Campus AI Chat Drawer -->
+    <div class="ai-chat-drawer" id="aiChatDrawer" aria-hidden="true">
+      <div class="ai-chat-header">
+        <div class="ai-chat-header-info">
+          <div class="ai-avatar">🤖</div>
+          <div>
+            <h3 class="ai-chat-title">Campus AI Guide</h3>
+            <span class="ai-chat-status"><span class="status-dot active"></span> Online • Intelligent Campus Router</span>
+          </div>
+        </div>
+        <div class="ai-chat-header-actions">
+          <button type="button" class="ai-chat-action-btn" id="clearAiChatBtn" title="Clear conversation">🗑️</button>
+          <button type="button" class="ai-chat-action-btn" id="closeAiChatBtn" title="Close assistant">✕</button>
+        </div>
+      </div>
+
+      <div class="ai-chat-body" id="aiChatMessages">
+        <!-- Initial AI greeting message -->
+        <div class="ai-message ai-message-bot">
+          <div class="ai-message-avatar">🤖</div>
+          <div class="ai-message-content">
+            <p><strong>Hello! I'm your AI Campus Guide.</strong></p>
+            <p>Ask me anything in natural language! For example, ask about directions, study areas, food, library hours, or specific classrooms.</p>
+            
+            <div class="ai-prompt-chips" id="aiPromptChips">
+              <button type="button" class="ai-chip" data-query="How do I reach the CSE Lab?">🧭 Directions to CSE Lab</button>
+              <button type="button" class="ai-chip" data-query="Where can I study quietly with WiFi?">📚 Quiet study spots</button>
+              <button type="button" class="ai-chip" data-query="Where can I eat lunch or get snacks?">☕ Food & Canteen</button>
+              <button type="button" class="ai-chip" data-query="Where is the medical room or first aid?">🏥 Medical & First Aid</button>
+              <button type="button" class="ai-chip" data-query="Where is the Principal's office?">🏛️ Principal's Office</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form class="ai-chat-footer" id="aiChatForm" onsubmit="return false;">
+        <input 
+          type="text" 
+          id="aiChatInput" 
+          class="ai-chat-input" 
+          placeholder="Ask a question (e.g., 'How to get to Library?')..." 
+          autocomplete="off"
+        >
+        <button type="submit" id="aiSendBtn" class="ai-send-btn" aria-label="Send message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <div class="brand-logo">
+          <span class="logo-pin">📍</span>
+          <span class="brand-name">FindMyClass</span>
+        </div>
+        <p class="footer-desc">Helping university students, freshmen, and visitors navigate college campus spaces with ease.</p>
+      </div>
+
+      <div class="footer-links">
+        <h4>Quick Navigation</h4>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#locations">All Locations</a></li>
+          <li><a href="#howItWorks">How It Works</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links">
+        <h4>Campus Blocks</h4>
+        <ul>
+          <li><a href="javascript:void(0)" class="footer-block-link" data-query="Block A">Block A (Administrative)</a></li>
+          <li><a href="javascript:void(0)" class="footer-block-link" data-query="Block B">Block B (Computer Science)</a></li>
+          <li><a href="javascript:void(0)" class="footer-block-link" data-query="Block C">Block C (Engineering & Labs)</a></li>
+          <li><a href="javascript:void(0)" class="footer-block-link" data-query="Block D">Block D (Hostels & Sports)</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; <span id="currentYear">2026</span> FindMyClass. Built for College Students. All rights reserved.</p>
+      <div class="footer-meta">
+        <span>⚡ Real-Time Navigation</span>
+        <span>•</span>
+        <span>💾 LocalStorage Powered</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
