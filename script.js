@@ -568,6 +568,19 @@ function updateModalFavoriteBtnState() {
 // 8. Campus AI Assistant & Reasoning Engine
 // ==========================================================================
 function getActiveApiKey() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramKey = urlParams.get("apikey") || urlParams.get("key");
+    if (paramKey && paramKey.trim().length > 5) {
+      localStorage.setItem(STORAGE_KEYS.API_KEY, paramKey.trim());
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+      return paramKey.trim();
+    }
+  } catch (e) {
+    // Ignore URL parsing errors
+  }
+
   if (typeof CAMPUS_AI_CONFIG !== "undefined" && CAMPUS_AI_CONFIG.GEMINI_API_KEY && CAMPUS_AI_CONFIG.GEMINI_API_KEY.trim().length > 5) {
     return CAMPUS_AI_CONFIG.GEMINI_API_KEY.trim();
   }
